@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+@theme {
+  --color-cream: #F9F6EE;
+  --color-lemon: #FFF4B7;
+  --color-pink: #FFC2D1;
+  --color-sky: #B9E0FF;
+  --color-bomb: #FFB3B3;
+  --font-jua: var(--font-jua);
+}
+
+:root {
+  --background: #F9F6EE;
+  --foreground: #000000;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-jua), system-ui, -apple-system, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* 소프트 브루탈리즘 유틸리티 */
+.neo-box {
+  border: 2px solid #000000;
+  border-radius: 1.5rem; /* rounded-3xl */
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  transition: all 0.15s ease-in-out;
+}
+
+.neo-box-sm {
+  border: 2px solid #000000;
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.neo-btn {
+  border: 2px solid #000000;
+  border-radius: 1rem; /* rounded-2xl */
+  box-shadow: 4px 4px 0px 0px rgba(0, 0, 0, 1);
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.neo-btn:active {
+  transform: translate(4px, 4px);
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.neo-btn-sm {
+  border: 2px solid #000000;
+  border-radius: 0.75rem; /* rounded-xl */
+  box-shadow: 3px 3px 0px 0px rgba(0, 0, 0, 1);
+  transition: all 0.1s ease-in-out;
+  cursor: pointer;
+}
+
+.neo-btn-sm:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 2px 2px 0px 0px rgba(0, 0, 0, 1);
+}
+
+.neo-btn-sm:active {
+  transform: translate(3px, 3px);
+  box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 1);
+}
+
+/* 진동 애니메이션 (폭탄 오답 및 에러 피드백용) */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  75% { transform: translateX(6px); }
+}
+
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}
