@@ -23,6 +23,7 @@ import TicketInventory from "../../../components/TicketInventory";
 import LuckyDrawMachine from "../../../components/LuckyDrawMachine";
 import ResultExport from "../../../components/ResultExport";
 import { QRCodeSVG } from "qrcode.react";
+import { appAlert, appConfirm, isReloadKey } from "@/lib/appDialog";
 
 // 로컬 시뮬레이션을 위한 더미 가상 봇들
 const DUMMY_BOTS = [
@@ -250,10 +251,7 @@ function GameRoomPageInner() {
       if (isExitingRef.current) return;
 
       // F5 또는 Ctrl+R / Command+R 새로고침 방지
-      if (
-        e.key === "F5" ||
-        ((e.ctrlKey || e.metaKey) && (e.key === "r" || e.key === "R"))
-      ) {
+      if (isReloadKey(e)) {
         e.preventDefault();
         setToastMessage("⚠️ 게임 진행 중 새로고침은 비활성화되어 있습니다.");
         return;
@@ -349,231 +347,6 @@ function GameRoomPageInner() {
     }
     setBookmarkedQuizzes(nextList);
     localStorage.setItem(cacheKey, JSON.stringify(nextList));
-  };
-
-  // 책갈피한 문제들을 복습용 PDF 학습지 형태로 새 창을 열어 브라우저 인쇄/PDF 저장을 수행하는 헬퍼
-  const handleExportBookmarksToPDF = () => {
-    if (bookmarkedQuizzes.length === 0) {
-      alert("책갈피된 문제가 없습니다.");
-      return;
-    }
-
-    const printWindow = window.open("", "_blank", "width=850,height=900");
-    if (!printWindow) {
-      alert("팝업 차단이 설정되어 있습니다. 팝업 차단을 해제한 뒤 다시 시도해 주세요.");
-      return;
-    }
-
-    // 인쇄용 HTML 템플릿 생성
-    let htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>럭키팡 수학 복습 학습지 - ${nickname}</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
-          body {
-            font-family: 'Inter', sans-serif;
-            background-color: #ffffff;
-            color: #000000;
-            margin: 0;
-            padding: 40px;
-          }
-          .header {
-            text-align: center;
-            border-bottom: 4px solid #000000;
-            padding-bottom: 20px;
-            margin-bottom: 30px;
-          }
-          .header h1 {
-            font-size: 28px;
-            font-weight: 900;
-            margin: 0;
-          }
-          .header p {
-            font-size: 14px;
-            font-weight: 700;
-            color: #555555;
-            margin: 5px 0 0 0;
-          }
-          .meta-info {
-            display: flex;
-            justify-content: space-between;
-            background-color: #f9f9f9;
-            border: 2px solid #000000;
-            border-radius: 12px;
-            padding: 12px 20px;
-            margin-bottom: 30px;
-            font-size: 14px;
-            font-weight: 700;
-          }
-          .quiz-card {
-            border: 3px solid #000000;
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 25px;
-            page-break-inside: avoid;
-            background-color: #ffffff;
-          }
-          .quiz-round {
-            display: inline-block;
-            background-color: #fef08a;
-            border: 2px solid #000000;
-            border-radius: 9999px;
-            padding: 4px 12px;
-            font-size: 11px;
-            font-weight: 900;
-            margin-bottom: 12px;
-          }
-          .quiz-question {
-            font-size: 18px;
-            font-weight: 900;
-            margin: 0 0 15px 0;
-            line-height: 1.4;
-          }
-          .option-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            background-color: #fafafa;
-            border: 1px solid #e5e7eb;
-            border-radius: 12px;
-            padding: 15px;
-          }
-          .option-item {
-            border-bottom: 1px solid #f3f4f6;
-            padding-bottom: 8px;
-            margin-bottom: 8px;
-          }
-          .option-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-            margin-bottom: 0;
-          }
-          .option-header {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-          }
-          .option-badge {
-            font-size: 9px;
-            font-weight: 900;
-            padding: 2px 6px;
-            border: 1px solid #000000;
-            border-radius: 4px;
-            white-space: nowrap;
-          }
-          .badge-lotto { background-color: #fef08a; }
-          .badge-correct { background-color: #bae6fd; }
-          .badge-bomb { background-color: #fecdd3; }
-          .badge-wrong { background-color: #e5e7eb; }
-          .option-text {
-            font-size: 13px;
-            font-weight: 700;
-          }
-          .option-desc {
-            font-size: 11px;
-            font-weight: 700;
-            color: #6b7280;
-            margin: 4px 0 0 20px;
-            line-height: 1.4;
-          }
-          .footer {
-            text-align: center;
-            font-size: 11px;
-            font-weight: 700;
-            color: #9ca3af;
-            margin-top: 50px;
-            border-top: 1px solid #e5e7eb;
-            padding-top: 15px;
-          }
-          @media print {
-            body { padding: 0; }
-            .no-print { display: none; }
-          }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <h1>🍀 럭키팡 수학 복습 학습지</h1>
-          <p>틀린 문제와 핵심 개념을 정리하여 수학 마스터가 되어보세요!</p>
-        </div>
-
-        <div class="meta-info">
-          <div>학생명: ${nickname.replace(/^\$/, "")}</div>
-          <div>방 번호: ${roomCode}</div>
-          <div>출력일시: ${new Date().toLocaleDateString("ko-KR")}</div>
-        </div>
-
-        <div>
-          ${bookmarkedQuizzes.map((item, idx) => {
-      return `
-              <div class="quiz-card">
-                <div class="quiz-round">ROUND ${item.round} 복습</div>
-                <h3 class="quiz-question">${idx + 1}. ${item.quiz.question_text}</h3>
-                
-                <div class="option-list">
-                  ${item.quiz.options.map((opt, oIdx) => {
-        const isCorrect = opt.isCorrect;
-        const isLotto = opt.isLotto;
-        const isBomb = opt.isBomb;
-
-        let badgeClass = "";
-        let badgeText = "";
-
-        if (isCorrect) {
-          if (isLotto) {
-            badgeClass = "badge-lotto";
-            badgeText = "럭키팡 정답";
-          } else {
-            badgeClass = "badge-correct";
-            badgeText = "일반 정답";
-          }
-        } else {
-          if (isBomb) {
-            badgeClass = "badge-bomb";
-            badgeText = "폭탄 오답";
-          } else {
-            badgeClass = "badge-wrong";
-            badgeText = "함정 오답";
-          }
-        }
-
-        return `
-                      <div class="option-item">
-                        <div class="option-header">
-                          <span class="option-badge ${badgeClass}">${badgeText}</span>
-                          <span class="option-text">${oIdx + 1}번 보기: ${opt.text}</span>
-                        </div>
-                        ${opt.description ? `<div class="option-desc">↳ ${opt.description}</div>` : ""}
-                      </div>
-                    `;
-      }).join("")}
-                </div>
-              </div>
-            `;
-    }).join("")}
-        </div>
-
-        <div class="footer">
-          수학 퀴즈게임 럭키팡(LuckyPang) 자율 학습지 | Copyright &copy; 럭키팡 All rights reserved.
-        </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-            }, 300);
-          };
-        </script>
-      </body>
-      </html>
-    `;
-
-    printWindow.document.open();
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
   };
 
   // 6자리 무작위 럭키팡 번호 생성 유틸
@@ -753,7 +526,7 @@ function GameRoomPageInner() {
           },
           onError: (err) => {
             console.error("[Host] 에러:", err);
-            alert(`방 생성 오류: ${err.message || "네트워크 상태를 확인해주세요."}`);
+            appAlert(`방 생성 오류: ${err.message || "네트워크 상태를 확인해주세요."}`);
           },
         });
         setActiveHostRoom(host);
@@ -961,7 +734,7 @@ function GameRoomPageInner() {
             setShowFallbackModal(true);
           },
           onKick: (reason: string) => {
-            alert(reason || "방장에 의해 내보내졌습니다.");
+            appAlert(reason || "방장에 의해 내보내졌습니다.");
             router.push("/?view=lobby");
           },
         });
@@ -1135,7 +908,7 @@ function GameRoomPageInner() {
 
     // 1. 방장이 의도적으로 방을 폐쇄했거나 완전히 폭파한 경우 즉시 강제 퇴장
     if (roomStatus === "closed") {
-      alert("방장이 방을 종료하여 대기실 로비로 이동합니다.");
+      appAlert("방장이 방을 종료하여 대기실 로비로 이동합니다.");
       router.push("/?view=lobby");
       return;
     }
@@ -1156,7 +929,7 @@ function GameRoomPageInner() {
     if (hostDisconnectTimer === null) return;
 
     if (hostDisconnectTimer <= 0) {
-      alert("선생님의 대기 시간이 초과되어 대기실 로비로 이동합니다.");
+      appAlert("선생님의 대기 시간이 초과되어 대기실 로비로 이동합니다.");
       router.push("/?view=lobby");
       return;
     }
@@ -1615,7 +1388,7 @@ function GameRoomPageInner() {
   // 교사(방장) - 대기실로 돌아가서 한 판 더 하기 핸들러
   const handleResetToWaiting = async () => {
     if (isPendingHostAction) return;
-    if (!confirm("대기실로 돌아가시겠습니까?\n모든 학생의 점수와 티켓이 초기화되며 새로 한 판 더 진행합니다.")) return;
+    if (!await appConfirm("대기실로 돌아가시겠습니까?\n모든 학생의 점수와 티켓이 초기화되며 새로 한 판 더 진행합니다.")) return;
 
     setIsPendingHostAction(true);
     try {
@@ -1669,7 +1442,7 @@ function GameRoomPageInner() {
       }
     } catch (e) {
       console.error("Failed to reset room to waiting:", e);
-      alert("대기실로 돌아가는 중 오류가 발생했습니다.");
+      appAlert("대기실로 돌아가는 중 오류가 발생했습니다.");
     } finally {
       setIsPendingHostAction(false);
     }
@@ -1677,7 +1450,7 @@ function GameRoomPageInner() {
 
   // 교사(방장)의 의도적 나가기 핸들러
   const handleHostExit = async () => {
-    if (confirm("🚨 주의: 모든 학생의 게임이 즉시 종료됩니다!\n\n선생님이 나가시면 참여 중인 모든 학생의 접속이 끊어지고 방이 사라집니다.\n정말 방을 종료하고 나가시겠습니까?")) {
+    if (await appConfirm("🚨 주의: 모든 학생의 게임이 즉시 종료됩니다!\n\n선생님이 나가시면 참여 중인 모든 학생의 접속이 끊어지고 방이 사라집니다.\n정말 방을 종료하고 나가시겠습니까?")) {
       isExitingRef.current = true;
       const host = getActiveHostRoom();
       if (host) {
@@ -1779,7 +1552,7 @@ function GameRoomPageInner() {
 
   // 학생 플레이어 직접 방 나가기
   const handleStudentExit = async () => {
-    if (confirm("정말 방에서 나가시겠습니까?")) {
+    if (await appConfirm("정말 방에서 나가시겠습니까?")) {
       isExitingRef.current = true;
       const guest = getActiveGuestRoom();
       if (guest) {
@@ -2919,14 +2692,8 @@ function GameRoomPageInner() {
             {/* 하단 단추 리스트 */}
             <div className="flex gap-3 w-full mt-2">
               <button
-                onClick={handleExportBookmarksToPDF}
-                className="flex-1 py-4 bg-lemon text-black font-black text-base neo-btn flex items-center justify-center gap-2"
-              >
-                <span>🖨️ PDF / 인쇄 저장</span>
-              </button>
-              <button
                 onClick={() => setShowReviewModal(false)}
-                className="px-8 py-4 bg-sky text-black font-black text-base neo-btn"
+                className="flex-1 py-4 bg-sky text-black font-black text-base neo-btn"
               >
                 닫기
               </button>

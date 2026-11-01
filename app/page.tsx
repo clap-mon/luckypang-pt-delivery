@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { appAlert, appConfirm } from "@/lib/appDialog";
 
 // 1. 공용 비속어(욕설) 방어용 금칙어 사전
 const BAD_WORDS = [
@@ -161,21 +162,21 @@ export default function LobbyPage() {
     } catch (err) {
       setLoading(false);
       console.error("방 생성 중 오류 발생:", err);
-      alert("방 생성에 실패했습니다.");
+      appAlert("방 생성에 실패했습니다.");
     }
   };
 
   // 2. 학생 - 방 입장 핸들러 (PeerJS 기반)
   const handleJoinRoom = async () => {
     if (!enterCode.trim() || !nickname.trim()) {
-      alert("방 번호와 닉네임을 입력해 주세요!");
+      appAlert("방 번호와 닉네임을 입력해 주세요!");
       return;
     }
 
     // 닉네임 최종 이중 검증
     const error = validateNickname(nickname);
     if (error) {
-      alert(error);
+      appAlert(error);
       return;
     }
 
@@ -276,8 +277,8 @@ export default function LobbyPage() {
                         {loading ? "방 확인 중..." : `방 [${activeHostRoom.code}]로 복귀`}
                       </button>
                       <button
-                        onClick={() => {
-                          if (confirm("이 방 정보를 삭제하고 새 방을 만드시겠습니까?")) {
+                        onClick={async () => {
+                          if (await appConfirm("이 방 정보를 삭제하고 새 방을 만드시겠습니까?")) {
                             localStorage.removeItem("luckypang_host_active_room");
                             setActiveHostRoom(null);
                           }
